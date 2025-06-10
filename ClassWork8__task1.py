@@ -33,12 +33,12 @@ class Library:
         return found_books
 
 library = Library()
-book1 = Book('1984', 'Джордж Оруэлл', 1949)
-book2 = Book('Война и мир', 'Лев Толстой', 1867)
+book1 = Book('Герой Нашего Времени', 'Михаил Лермонтов', 1840)
+book2 = Book('Преступление и Наказание', 'Федор Достоевский', 1866)
 
 library.add_book(book1)
 library.add_book(book2)
 
-books = library.find_books_by_author('Лев Толстой')
+books = library.find_books_by_author('Федор Достоевский')
 for book in books:
     print(book)
