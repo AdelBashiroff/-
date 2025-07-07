@@ -1,53 +1,79 @@
+import random
 import time
+import numpy as np
 import matplotlib.pyplot as plt
-from statistics import mean
 
-def count_occurrences(b, p, a, d):
-    count = 0
-    for c in range(1, d + 1):
-        if (b * c) % p == a:
-            count += 1
-    return count
+# Алгоритм Евклида: деление с остатком
+def gcd(a, b):
+    while b != 0:
+        a, b = b, a % b
+    return a
 
-# Запуск на разных значениях d
-ds = [10**i for i in range(1, 7)]  # от 10 до 1_000_000
-b = 17
-p = 9973
-a = 42
-repeats = 10
+# Алгоритм Евклида: вычитание
+def gcd2(a, b):
+    while a != 0 and b != 0:
+        if a > b:
+            a = a - b
+        else:
+            b = b - a
+    return a or b
 
-times = []
-
-for d in ds:
-    durations = []
+# Функция замера времени
+def measure_time(func, *args, repeats=10):
+    times = []
     for _ in range(repeats):
-        start = time.time()
-        count_occurrences(b, p, a, d)
-        end = time.time()
-        durations.append(end - start)
-    times.append({
-        "d": d,
-        "avg": mean(durations),
-        "min": min(durations),
-        "max": max(durations)
-    })
+        start_time = time.perf_counter()
+        func(*args)
+        end_time = time.perf_counter()
+        times.append(end_time - start_time)
+    return np.mean(times), np.min(times), np.max(times)
 
-# Печать таблицы
-print(f"{'d':>10} | {'avg':>10} | {'min':>10} | {'max':>10}")
-print("-" * 45)
-for t in times:
-    print(f"{t['d']:10} | {t['avg']:.6f} | {t['min']:.6f} | {t['max']:.6f}")
+# Список размеров (чисел от 10 до 1_000_000)
+sizes = [10 ** i for i in range(1, 7)]
+
+# Хранилища результатов
+time_gcd_mean = []
+time_gcd_min = []
+time_gcd_max = []
+
+time_gcd2_mean = []
+time_gcd2_min = []
+time_gcd2_max = []
+
+# Замеры
+for size in sizes:
+    a = random.randint(size, 10 * size)
+    b = random.randint(1, size)
+
+    mean_gcd, min_gcd, max_gcd = measure_time(gcd, a, b)
+    time_gcd_mean.append(mean_gcd)
+    time_gcd_min.append(min_gcd)
+    time_gcd_max.append(max_gcd)
+
+    mean_gcd2, min_gcd2, max_gcd2 = measure_time(gcd2, a, b)
+    time_gcd2_mean.append(mean_gcd2)
+    time_gcd2_min.append(min_gcd2)
+    time_gcd2_max.append(max_gcd2)
+
+    print(f"Размер: {size}")
+    print(f"GCD (деление): среднее={mean_gcd:.10f}, мин={min_gcd:.10f}, макс={max_gcd:.10f}")
+    print(f"GCD2 (вычитание): среднее={mean_gcd2:.10f}, мин={min_gcd2:.10f}, макс={max_gcd2:.10f}")
+    print("------")
 
 # Построение графика
-plt.figure(figsize=(10, 6))
-plt.plot([t['d'] for t in times], [t['avg'] for t in times], marker='o', label='Среднее время')
-plt.plot([t['d'] for t in times], [t['min'] for t in times], linestyle='--', label='Минимальное время')
-plt.plot([t['d'] for t in times], [t['max'] for t in times], linestyle='--', label='Максимальное время')
-plt.xlabel("d (число итераций)")
-plt.ylabel("Время выполнения (сек)")
-plt.title("Время работы count_occurrences в зависимости от d")
+plt.figure(figsize=(12, 6))
+
+plt.plot(sizes, time_gcd_mean, label="GCD (деление с остатком)", marker='o', color='blue')
+plt.fill_between(sizes, time_gcd_min, time_gcd_max, alpha=0.2, color='blue')
+
+plt.plot(sizes, time_gcd2_mean, label="GCD2 (вычитание)", marker='o', color='orange')
+plt.fill_between(sizes, time_gcd2_min, time_gcd2_max, alpha=0.2, color='orange')
+
 plt.xscale("log")
 plt.yscale("log")
+plt.xlabel("Размер чисел")
+plt.ylabel("Время выполнения (секунды)")
+plt.title("Сравнение алгоритмов Евклида: деление vs вычитание")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
