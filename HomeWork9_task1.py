@@ -2,82 +2,79 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 
-from statistics import mean
-
-# Функция без NumPy
-def manual_max_of_row_means(matrix):
-    max_mean = float('-inf')
+#без NumPy
+def max_of_means(matrix):
+    max_mean = 10**(-8)
     for row in matrix:
         row_mean = sum(row) / len(row)
         if row_mean > max_mean:
             max_mean = row_mean
     return max_mean
 
-# Функция с NumPy
-def numpy_max_of_row_means(matrix_np):
+#с NumPy
+def numpy_max_of_means(matrix_np):
     return np.max(np.mean(matrix_np, axis=1))
+    
+#для измерения времени выполнения    
+def measure_time(func, matrix, repeats=5):
+    if repeats <= 0:
+        raise ValueError("Количество повторений должно быть больше 0")
 
-# Размеры матриц для тестирования
-sizes = [10, 100, 200, 400, 600, 800, 1000]
-repeats = 10
-
-manual_times = []
-numpy_times = []
-
-for size in sizes:
-    manual_t = []
-    numpy_t = []
+    times = []
+    result = None
 
     for _ in range(repeats):
-        # Генерация случайной матрицы
-        matrix = [[np.random.randint(0, 1000) for _ in range(size)] for _ in range(size)]
-        matrix_np = np.array(matrix)
+        start_time = time.time()
+        result = func(matrix)
+        end_time = time.time()
+        times.append(end_time - start_time)
+    return result, np.mean(times), min(times), max(times)
 
-        # Без NumPy
-        start = time.time()
-        manual_max_of_row_means(matrix)
-        end = time.time()
-        manual_t.append(end - start)
+sizes = [5, 10, 50, 100, 1000, 10_000, 20_000]
 
-        # С NumPy
-        start = time.time()
-        numpy_max_of_row_means(matrix_np)
-        end = time.time()
-        numpy_t.append(end - start)
+times_numpy_mean = []
+times_numpy_min = []
+times_numpy_max = []
 
-    # Сохраняем среднее время
-    manual_times.append({
-        "min": min(manual_t),
-        "max": max(manual_t),
-        "avg": mean(manual_t)
-    })
+times_list_mean = []
+times_list_min = []
+times_list_max = []
 
-    numpy_times.append({
-        "min": min(numpy_t),
-        "max": max(numpy_t),
-        "avg": mean(numpy_t)
-    })
+for size in sizes:
+    N, M = size, size
+    A = np.random.randint(1, 10, size=(N, M))
+    A_list = A.tolist()
+    max_average_numpy, mean_time_numpy, min_time_numpy, max_time_numpy = measure_time(numpy_max_of_means, A, repeats=5)
+    times_numpy_mean.append(mean_time_numpy)
+    times_numpy_min.append(min_time_numpy)
+    times_numpy_max.append(max_time_numpy)
+    max_average_list, mean_time_list, min_time_list, max_time_list = measure_time(max_of_means, A_list, repeats=5)
+    times_list_mean.append(mean_time_list)
+    times_list_min.append(min_time_list)
+    times_list_max.append(max_time_list)
+    print(f"Размер матрицы: {size}x{size}")
+    print(f"Максимальное среднее арифметическое для NumPy массива: {average_numpy}")
+    print(f"Среднее время выполнения для NumPy массива: {mean_time_numpy:.7f} секунд")
+    print(f"Минимальное время выполнения для NumPy массива: {min_time_numpy:.7f} секунд")
+    print(f"Максимальное время выполнения для NumPy массива: {max_time_numpy:.7f} секунд")
+    print()
 
-# ------------------------------
-# Печать таблицы результатов
-# ------------------------------
+    print(f"Максимальное среднее арифметическое для списка: {average_list}")
+    print(f"Среднее время выполнения для списка: {mean_time_list:.7f} секунд")
+    print(f"Минимальное время выполнения для списка: {min_time_list:.7f} секунд")
+    print(f"Максимальное время выполнения для списка: {max_time_list:.7f} секунд")
+    print()
 
-print(f"{'Size':>6} | {'Manual (avg)':>12} | {'Manual (min)':>12} | {'Manual (max)':>12} || {'NumPy (avg)':>12} | {'NumPy (min)':>12} | {'NumPy (max)':>12}")
-print("-" * 90)
-for i, size in enumerate(sizes):
-    print(f"{size:6} | {manual_times[i]['avg']:.6f}     | {manual_times[i]['min']:.6f}     | {manual_times[i]['max']:.6f}     || {numpy_times[i]['avg']:.6f}     | {numpy_times[i]['min']:.6f}     | {numpy_times[i]['max']:.6f}")
-
-# ------------------------------
 # Построение графика
-# ------------------------------
-
-plt.figure(figsize=(10, 6))
-plt.plot(sizes, [m['avg'] for m in manual_times], label="Manual (avg)", marker='o')
-plt.plot(sizes, [m['avg'] for m in numpy_times], label="NumPy (avg)", marker='o')
-plt.xlabel("Matrix size (N = M)")
-plt.ylabel("Average Time (seconds)")
-plt.title("Сравнение скорости: NumPy vs обычный Python")
+plt.figure(figsize=(10, 6)) #Создаем фигуру (окно для графика) с размером 10x6 дюймов
+plt.plot(sizes, times_numpy_mean, label="NumPy (среднее)", marker="o")
+plt.plot(sizes, times_list_mean, label="Список (среднее)", marker="o")
+plt.title("Зависимость времени выполнения от размера матрицы")
 plt.legend()
 plt.grid(True)
-plt.tight_layout()
+# Устанавливаем логарифмическую шкалу для осей X и Y
+plt.xscale("log")
+plt.yscale("log")
+
+# Отображаем график
 plt.show()
