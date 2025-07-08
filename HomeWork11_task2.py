@@ -30,7 +30,7 @@ for n in Ns:
     avg_times.append(avg_t)
     print(f"N={n:2d} | Среднее время: {avg_t:.8f} с | Мин: {min_t:.8f} с | Макс: {max_t:.8f} с")
 
-# Построение графика
+
 plt.figure(figsize=(12, 6))
 plt.plot(Ns, avg_times, label="Среднее время", marker='o', color='green')
 plt.fill_between(Ns, min_times, max_times, alpha=0.2, color='green', label="Мин/Макс")
